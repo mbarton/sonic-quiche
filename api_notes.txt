@@ -54,6 +54,32 @@ Hack 4) cue and sync are conditional waits and there's none of that in Javascrip
 
 I currently have no idea how to solve this problem.
 
+Concepts
+--------
+
+Synths: instruments that can play notes (play, play_chord etc)
+  Args: TODO
+
+Notes:  notes played on instruments
+  :amp       - the amplitude this note
+  :amp_slide - TODO: change from what to what? current to new? maybe useful with control call
+  :pan       - ronseal
+  :pan_slide - TODO: change from what to what? current to new?
+  :attack    - duration until peak (A in ADSR)
+  :sustain   - duration note stays at full amplitude (S in ADSR)
+  :release   - duration the note fades away (R in ADSR)
+
+FX:     guitar pedal style effects that can be applied to the output (with_fx)
+  Args: TODO
+
+Sample packs: a folder full of audio clips which can then be played by name (sample :foo plays foo.wav etc)
+              We could in theory support both on server clip banks and local folders with the ability to upload and share?
+  :rate
+
+Synthdefs: SuperCollider compatible synth defs. Supporting these may be difficult :)
+
+The original code base has Note, Scale and Chord objects which I should consider porting wholesale as it will be a total pain otherwise.
+
 Spider API
 ----------
 
@@ -78,10 +104,6 @@ choose
 use_random_seed - pure ruby impl (use srand() because Ruby 1.8 doesn't have nice Random class)
 with_random_seed
 
-use_bpm         - set local setting
-with_bpm
-current_bpm
-
 rt              - mildly crazy api for beats in the given number of seconds, pure ruby
 
 sleep           - see architecture bit
@@ -90,4 +112,105 @@ wait
 cue             - these are basically pthead conditions [lol]
 sync            - TODO: think up another funky Javascript hack to get them to work
 
-in_thead        - see architecture bit
+in_thread        - see architecture bit
+
+Worker Local Settings
+---------------------
+
+Ronseal. Used to work out arguments to commands which are then sent to the sound engine.
+
+The with versions need to be pure ruby implementations. Everything else depends on how much we move out for compile reasons.
+
+use_bpm
+with_bpm
+current_bpm
+
+use_arg_bpm_scaling
+with_arg_bpm_scaling
+
+set_sched_ahead_time! - NOT IMPLEMENTED (covered by worker architecture). Should just do nothing (maybe with a warning?)
+current_sched_ahead_time
+
+use_debug
+with_debug
+current_debug
+
+use_arg_checks     - TODO: need to establish exactly what these checks are
+with_arg_checks
+current_arg_checks
+
+use_transpose
+with_transpose
+current_transpose
+
+use_synth
+with_synth
+current_synth
+
+use_merged_synth_defaults(synth_args)   - MERGE
+with_merged_synth_defaults(synth_args)
+use_synth_defaults(synth_args)          - DON'T MERGE, ASSIGN
+with_synth_defaults(synth_args)
+current_synth_defaults
+
+load_synthdefs - only worth it if we eventually support SuperCollider synthdefs
+
+use_fx(fx_args)  - Not currently implemented in Sonic Pi, no reason why we couldn't
+with_fx(fx_args) - Is implemented
+
+use_sample_pack(pack)
+use_sample_pack_as(pack, name)
+with_sample_pack(pack)
+with_sample_pack_as(pack, name)
+current_sample_pack
+current_sample_pack_aliases - TODO eh?
+
+load_sample(path) - TODO: what format is the information returned, does this add it to the current pack?
+load_samples(...)
+sample_info(path) - returns the info you get back from load_sample
+sample_buffer - load_sample again
+
+sample_names     - TODO: wtf do all these bad boys do?
+all_sample_names
+sample_groups
+
+set_volume!     - between 0 and 5
+current_volume
+
+status - hash of useful debug
+
+Commands
+--------
+
+recording_start
+recording_stop
+recording_save(filename)
+recording_delete
+
+play(note, note_args)                       - delegates to play chord, single message type?
+play_pattern(notes, note_args)              - ends up calling play, sleep 1, play, sleep 1 etc
+play_pattern_timed(notes, times, note_args) - calls play, sleep times[0], play, sleep times[1] etc
+play_chord(notes, note_args)
+
+synth(name, synth_args) - like play but for a named synth
+
+control(node_handle, synth_args) - pass some new args to a running node, sample or FX block
+stop(node_handle) - stops a running sound
+
+sample_duration(name) - returns the length of the sample. accepts :rate parameter just like sample
+sample(name) - play the sample
+
+sleep - see hackery section above
+
+Utility
+-------
+
+midi_to_hz
+hz_to_midi
+
+scale(tonic, name, args) - return an array of note numbers for the given scale at the given tonic. Takes :num_octaves parameter.
+chord(tonic, name) - like scale but for chords! 
+
+note(note, args) - convert from note name (C, D etc) into a number to use with play. Takes :octave parameter.
+note_info(note, args) - return SonicPi::Note from note name. Takes :octave parameter.
+
