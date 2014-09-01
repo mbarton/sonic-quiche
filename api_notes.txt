@@ -1,0 +1,93 @@
+Architecture
+------------
+
+The front-end will look pretty much the same as normal Sonic-Pi: Play, Stop buttons and a big old code block to edit.
+
+When you press play, a Web Worker is launched with the code from the UI and a unique ID number. The worker compiles the Ruby using Opal and then begins execution.
+
+Each API command causes a message to be issued from the worker back to the main page. These messages are then decoded into calls to the Web Audio API.
+
+The messages will look something like:
+
+	0 PLAY [synth] 50
+	0 CHORD [synth] 30 50 70
+	1 SET_FX [fx chain]
+	0 SKIP 100
+
+The ID numbers mean that a seperate offset can be stored for each worker which is then increment on skips. Once stop is pressed all workers are terminated and the command buffer is flushed.
+
+The rest of this section details a few hacks that are required to implement some of the Sonic Pi API in a browser-based Javascript environment.
+
+Hack 1) There's no sleep in Javascript
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The solution to the missing sleep is to simply not sleep at all, rather issue a SKIP command. The only downside to this is that workers will produce commands as fast as the CPU can run the program, leading to high CPU usage and a rather hefty buffer of commands waiting to be actioned.
+
+I've thought of and sketched out various solutions:
+	- Macro transforms on the code
+		- Impossible for the general case - cannot convert synchronous code to asynchronous code
+	- Custom Ruby interpreter in JS
+		- Possible by ripping apart Opal but kinda hard work when you think about the entire stdlib
+
+The "solution" I've gone with was to abuse the synchronous XHR to make a request to a web server with the response then delayed by a given amount. http://httpbin.org/ already supports this but I may need to code my own if I end up being rate limited.
+
+Since the network is inherently variable, it is extremely unlikely that the request will complete in exactly the time requested. As such, each worker will keep a tally of how many skips it has issued vs how long it has actually slept doing XHR requests. The user can then configure an optimum amount to be "ahead" of the processing. It will, of course, ship with a sensible default.
+
+As a final catch all, the main thread will rate limit the number of commands coming from a single worker and terminate it if the buffer grows too large. This will most likely cause all sound to stop as it is genuinely an error state.
+
+Hack 2) in_thread is fork and there's no fork in Javascript
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+My implementation of in_thread is totally fudgy and approaching immoral but should just about do the job. 
+
+Each worker has a counter of the number of times in_thread has been called. This counter is essentially the thread_id. When it is called, the worker posts this back to the main page (e.g. IN_THREAD 2).
+
+The main page then creates a new worker but initialises it with the number. The worker then executes the program, discarding any commands and not sleeping until it reaches the in_thread call with the correct index. It then resumes normal execution.
+
+Hack 3) we can't tell workers about on_keypress because they are busy executing programs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I can't think of a solution right now. Maybe attempt to steal the block passed to the function and run it in a special worker?
+
+Hack 4) cue and sync are conditional waits and there's none of that in Javascript
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I currently have no idea how to solve this problem.
+
+Spider API
+----------
+
+All the functions from spiderapi.rb. These will mostly be implemented in pure ruby and then compiled using Opal.
+Some may be moved out into native js calls if it happens to speed up compilation times (it probably won't).
+
+defonce         - pure ruby impl
+define          - pure ruby impl
+on_keypress     - TODO: maybe exec in custom worker?
+comment         - pure ruby impl
+uncomment       - pure ruby impl
+print           - console.log or better in the UI
+puts            - as above
+    
+dice            - pure ruby impl (use rand() since nice Random class is Ruby 1.9 [sad soup] )
+one_in   
+rrand    
+rrand_i  
+rand
+rand_i
+choose
+use_random_seed - pure ruby impl (use srand() because Ruby 1.8 doesn't have nice Random class)
+with_random_seed
+
+use_bpm         - set local setting
+with_bpm
+current_bpm
+
+rt              - mildly crazy api for beats in the given number of seconds, pure ruby
+
+sleep           - see architecture bit
+wait
+
+cue             - these are basically pthead conditions [lol]
+sync            - TODO: think up another funky Javascript hack to get them to work
+
+in_thead        - see architecture bit
