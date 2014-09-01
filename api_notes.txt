@@ -182,25 +182,42 @@ status - hash of useful debug
 Commands
 --------
 
+Note IDs: worker_id-note_id (incrementing number)
+
 recording_start
+	{op: "recording_start"}
 recording_stop
+	{op: "recording_stop"}
 recording_save(filename)
+	{op: "recording_save", args: {
+		filename: "..."
+	}}
 recording_delete
+	{op: "recording_delete"}
 
 play(note, note_args)                       - delegates to play chord, single message type?
 play_pattern(notes, note_args)              - ends up calling play, sleep 1, play, sleep 1 etc
 play_pattern_timed(notes, times, note_args) - calls play, sleep times[0], play, sleep times[1] etc
 play_chord(notes, note_args)
+	{id: note_id, op: "play_chord", args: note_args}
 
 synth(name, synth_args) - like play but for a named synth
+	{id: note_id, op: "play_chord", args: synth_args ++ {"synth": "..."}}
 
 control(node_handle, synth_args) - pass some new args to a running node, sample or FX block
+	{id: note_id, op: "control", args: synth_args}
+
 stop(node_handle) - stops a running sound
+	{id: note_id, op: "stop"}
 
 sample_duration(name) - returns the length of the sample. accepts :rate parameter just like sample
+	- TODO: see if we can get away without decoding the sample again in the worker thread
+	-       answer we probably can't :(
+
 sample(name) - play the sample
 
 sleep - see hackery section above
+	{op: "sleep", args: {"time", n}}
 
 Utility
 -------
@@ -213,4 +230,15 @@ chord(tonic, name) - like scale but for chords!
 
 note(note, args) - convert from note name (C, D etc) into a number to use with play. Takes :octave parameter.
 note_info(note, args) - return SonicPi::Note from note name. Takes :octave parameter.
+
+Plan of attack
+--------------
+
+	1) Stub out Ruby API
+	2) Build compiler and worker infrastructure, emitting events (args based on nice lovely ruby hashes)
+		- Normal stuff
+		- sleep support (lol)
+		- in_thread support (even bigger lol)
+	3) Hook up events to Web Audio API
+		- Profit!
 
