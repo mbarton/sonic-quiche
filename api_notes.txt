@@ -35,6 +35,8 @@ Since the network is inherently variable, it is extremely unlikely that the requ
 
 As a final catch all, the main thread will rate limit the number of commands coming from a single worker and terminate it if the buffer grows too large. This will most likely cause all sound to stop as it is genuinely an error state.
 
+If I build my own special sleep server then the main page can feed back queue size information to allow the sleep to be customised.
+
 Hack 2) in_thread is fork and there's no fork in Javascript
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
