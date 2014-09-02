@@ -18,6 +18,8 @@ The ID numbers mean that a seperate offset can be stored for each worker which i
 
 When a worker is created, compilation should take place and then the starting skip offset retreived from the AudioContext to keep the timing as tight as possible.
 
+Once we have the compiled code, we don't need to recompile for workers created as a result of in_thread calls. Bonza!
+
 The rest of this section details a few hacks that are required to implement some of the Sonic Pi API in a browser-based Javascript environment.
 
 Hack 1) There's no sleep in Javascript
