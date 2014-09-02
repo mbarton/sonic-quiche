@@ -16,6 +16,8 @@ The messages will look something like:
 
 The ID numbers mean that a seperate offset can be stored for each worker which is then increment on skips. Once stop is pressed all workers are terminated and the command buffer is flushed.
 
+When a worker is created, compilation should take place and then the starting skip offset retreived from the AudioContext to keep the timing as tight as possible.
+
 The rest of this section details a few hacks that are required to implement some of the Sonic Pi API in a browser-based Javascript environment.
 
 Hack 1) There's no sleep in Javascript
