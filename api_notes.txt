@@ -52,7 +52,9 @@ I can't think of a solution right now. Maybe attempt to steal the block passed t
 Hack 4) cue and sync are conditional waits and there's none of that in Javascript
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-I currently have no idea how to solve this problem.
+The solution here is to send cue and sync as commands to the main page and maintain seperate queues of commands from each worker. Commands are then submitted to the sound engine round-robin, with Sync and Cue becoming cross-queue barriers.
+
+When a cue is processed maybe we can rewrite the Sync as a sleep of the appropriate amount (sleep until the current time of the other queue?)
 
 Concepts
 --------
@@ -110,7 +112,7 @@ sleep           - see architecture bit
 wait
 
 cue             - these are basically pthead conditions [lol]
-sync            - TODO: think up another funky Javascript hack to get them to work
+sync            - see architecture for how we hack this to work
 
 in_thread        - see architecture bit
 
