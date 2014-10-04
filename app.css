@@ -2,6 +2,10 @@ h1 {
 	font-family: 'Lato', sans-serif;
 }
 
+#events {
+	font-family: 'Inconsolata', monospace;
+}
+
 #editor { 
     position: absolute;
     top: 0;
