@@ -1,0 +1,50 @@
+<html>
+<head>
+	<title>Sonic-Quiche</title>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.5/css/normalize.min.css" type="text/css" />
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.5/css/foundation.min.css" type="text/css" />
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato" type="text/css">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.min.css" type="text/css" />
+	<link rel="stylesheet" href="app.css" type="text/css" />
+</head>
+<body>
+	<div class="row">
+		<div class="small-9 columns">
+			<h1>Sonic Quiche</h1>
+		</div>
+		<div class="small-1 columns">
+			<button class="success"><i class="fa fa-play"></i></button>
+		</div>
+		<div class="small-1 columns">
+			<button class="alert disabled"><i class="fa fa-stop"></i></button>
+		</div>
+		<div class="small-1 columns">
+			<button href="#" data-dropdown="saved_code" aria-controls="saved_code" aria-expanded="false" class="dropdown">
+				<i class="fa fa-bars"></i>
+			</button>
+		</div>
+		<ul id="saved_code" data-dropdown-content class="f-dropdown" aria-hidden="true" tabindex="-1">
+		</ul>
+	</div>
+	<div class="row">
+		<div id="editor_column" class="small-8 columns">
+			<!-- Ace inherits the size of the container. Foundation containers are 0px unless they have
+				 something in them. Hence this dodgy nsbp -->
+			&nbsp;
+			<div id="editor"></div>
+		</div>
+		<div class="small-4 columns">
+			<h4>Events</h4>
+		</div>
+	</div>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+	<script tpye="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.3/fastclick.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.5/js/foundation.min.js"></script>
+	<script type="text/javascript" src="//cdn.opalrb.org/opal/current/opal.min.js"></script>
+	<script type="text/javascript" src="//cdn.opalrb.org/opal/current/opal-parser.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ace/1.1.3/ace.js"></script>
+	<script type="text/javascript" src="editor.js"></script>
+	<script type="text/javascript" src="app.js"></script>
+</body>
+</html>
