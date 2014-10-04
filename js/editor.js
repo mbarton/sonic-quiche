@@ -66,9 +66,9 @@ SQEditor = function(config) {
 		var timeString = formatTimePart(now.getHours()) + ":" + formatTimePart(now.getMinutes()) + ":" + formatTimePart(now.getSeconds());
 
 		if(level == "error") {
-			var label = "<span class='label error'>" + timeString + "<i class='fa fa-exclamation-triangle'></i></span>";
+			var label = "<span class='label error'><i class='fa fa-exclamation-triangle'></i>" + timeString + "</span>";
 		} else if(level == "warn") {
-			var label = "<span class='label secondary'>" + timeString + "<i class='fa fa-exclamation-triangle'></i></span>";
+			var label = "<span class='label secondary'><i class='fa fa-exclamation-triangle'></i>" + timeString + "</span>";
 		} else {
 			var label = "<span class='label secondary'>" + timeString + "</span>";
 		}
@@ -87,7 +87,7 @@ SQEditor = function(config) {
 	});
 
 	EventBus.on("warn", function(data) {
-		_log("info", data);
+		_log("warn", data);
 	});
 
 	EventBus.on("error", function(data) {

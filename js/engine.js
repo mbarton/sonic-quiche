@@ -1,55 +1,62 @@
 function SQEngine() {
-	var apiHeader = null;
-	var nextId = 0;
+	var worker_template = null;
 	var workers = {};
+	var code = "";
 
-	function handleEvent(data) {
-		switch(data.action) {
+	function handleEvent(event) {
+		switch(event.action) {
 			case "complete":
-				delete workers[data.data];
+				delete workers[event.thread_id];
 
 				if($.isEmptyObject(workers)) {
 					EventBus.fire("stopped");
 				}
 				break;
 
-			default:
-				EventBus.fire(data.action, data.data);
+			case "worker":
+				var newThreadId = event.data;
+				if(!(newThreadId in workers)) {
+					startWorker(newThreadId);
+				}
 				break;
+
+			case "log":
+			case "warn":
+			case "error":
+				EventBus.fire(event.action, event.data);
+				break;
+
+			default:
+				EventBus.fire(event.action, {thread_id: event.thread_id, data: event.data});
 		}
 	}
 
-	function startWorker(code, id) {
+	function startWorker(id) {
 		var codeBlob = new Blob([code], {type: "application/javascript"});
 		workers[id] = new Worker(URL.createObjectURL(codeBlob));
 		workers[id].onmessage = function(e) {
 			handleEvent(e.data);
 		}
+		workers[id].postMessage({thread_id: id});
 	}
 
-	function play(code) {
-		if(apiHeader == null) {
+	function play(newCode) {
+		stop();
+
+		if(worker_template == null) {
 			EventBus.fire("log", "Cannot compile - haven't finished downloading api.rb yet");
 		} else {
-			var id = nextId;
-			nextId++;		
-
 			EventBus.fire("log", "Compiling script");
-			
-			var prefix = "importScripts('http://cdn.opalrb.org/opal/current/opal.min.js');\n" + 
-			             "try {\n";
-			var suffix = "} catch(err) {\n" +
-						 '	postMessage({ action:"error", data: err.toString() });\n' +
-						 "}\n" +
-			             'postMessage({ action: "complete", data: ' + id + '});';
-
-			var program = prefix + "\n" + Opal.compile(apiHeader + "\n" + code) + "\n" + suffix;
+			var rawWorkerCode = worker_template.replace("[[code_body]]", newCode);
+			code =
+				'importScripts("http://cdn.opalrb.org/opal/current/opal.min.js");\n' +
+				Opal.compile(rawWorkerCode);
 			
 			EventBus.fire("log", "Running script");
 			EventBus.fire("playing", {});
 
-			// console.log(program);
-			startWorker(program, id);
+			console.log(code);
+			startWorker(0);
 		}
 	}
 
@@ -64,7 +71,7 @@ function SQEngine() {
 	}
 
 	$.get("api.rb", function(code) {
-		apiHeader = code;
+		worker_template = code;
 	});
 
 	EventBus.on("play", function(code) { play(code); });

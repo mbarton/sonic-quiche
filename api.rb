@@ -12,9 +12,22 @@
 # notice is included.
 #++
 
+%x{
+    var _reserved = {
+        thread_id: 0,
+        current_thread: 0,
+        sleep_mul: 0.5, // 120 BPM,
+        send: function(action, data) {
+            if(action == "complete" || _reserved.current_thread == _reserved.thread_id) {
+                postMessage({action: action, data: data, thread_id: _reserved.thread_id});
+            }
+        }
+    };
+}
+
 def print(output)
     %x{
-        postMessage({ action: "log", data: output });
+        _reserved.send("log", output);
     }
 end
 
@@ -58,7 +71,7 @@ def use_random_seed(seed, &block)
     raise "use_random_seed does not work with a block. Perhaps you meant with_random_seed" if block
 
     %x{
-        postMessage({ action: "warn", data: "Random number seeding is not supported in your web browser" })
+        _reserved.send("warn", "Random number seeding is not supported in web browsers");
     }
 end
 
@@ -68,3 +81,86 @@ def with_random_seed(seed, &block)
     block.call
 end
 
+def use_bpm(bpm, &block)
+    raise "use_bpm does not work with a block. Perhaps you meant with_bpm" if block
+
+    %x{
+        _reserved.sleep_mul = 60.0 / bpm;
+    }
+end
+
+def with_bpm(bpm, &block)
+    raise "with_bpm must be called with a block. Perhaps you meant use_bpm" unless block
+    old_bpm = current_bpm
+    use_bpm(bpm)
+    block.call
+    use_bpm(old_bpm)
+end
+
+def current_bpm
+    %x{
+        return 60.0 / _reserved.sleep_mul;
+    }
+end
+
+def rt(t)
+    %x{
+        return t / _reserved.sleep_mul;
+    }
+end
+
+def sleep(seconds)
+    %x{
+        _reserved.send("sleep", (seconds * _reserved.sleep_mul));
+    }
+end
+
+def sync(cue_id)
+    %x{
+        _reserved.send("sync", cue_id);
+    }
+end
+
+def cue(cue_id)
+    %x{
+        _reserved.send("cue", cue_id);
+    }
+end
+
+def wait(time)
+    if time.is_a? Symbol
+        sync(time)
+    else
+        sleep(time)
+    end
+end
+
+def in_thread(*opts, &block)
+    %x{
+        if(_reserved.current_thread + 1 == _reserved.thread_id) {
+            _reserved.current_thread++;
+            block.$call();
+            _reserved.current_thread--;
+        } else {
+            _reserved.send("worker", _reserved.current_thread + 1);
+        }
+    }
+end
+
+def _reserved_body
+    [[code_body]]
+end
+
+%x{
+    onmessage = function(initEvent) {
+        _reserved.thread_id = initEvent.data.thread_id;
+
+        try {
+            $opal.Object._proto.$_reserved_body();
+        } catch(err) {
+            _reserved.send("error", err.toString());
+        }
+
+        _reserved.send("complete", {});
+    }
+}

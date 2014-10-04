@@ -8,6 +8,7 @@ var editor = new SQEditor({
 	play_id: "play",
 	stop_id: "stop",
 	example_scripts: [
+		"examples/thread_test.rb",
 		"examples/random_test.rb",
 		"examples/lesson1_demo.rb",
 		"examples/lesson2_baseline.rb"
