@@ -55,7 +55,6 @@ function SQEngine() {
 			EventBus.fire("log", "Running script");
 			EventBus.fire("playing", {});
 
-			console.log(code);
 			startWorker(0);
 		}
 	}

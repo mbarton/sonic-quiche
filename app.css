@@ -21,3 +21,11 @@ h1 {
 button i.fa {
 	font-size: 1.4em;
 }
+
+#loading_icon {
+	display: none;
+}
+
+#editor_row {
+	display: none;
+}

@@ -1,6 +1,8 @@
 $(document).foundation();
 
 var engine = new SQEngine();
+var audio = new SQAudio();
+
 var editor = new SQEditor({
 	editor_id: "editor",
 	selector_id: "saved_code",
@@ -14,3 +16,5 @@ var editor = new SQEditor({
 		"examples/lesson2_baseline.rb"
 	]
 });
+
+audio.load();
