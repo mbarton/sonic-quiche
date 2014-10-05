@@ -5,6 +5,10 @@ SQEditor = function(config) {
 	// Opal barfs on tabs so use spaces instead
 	editor.getSession().setUseSoftTabs(true);
 
+	editor.on("change", function(){
+		localStorage["sq_code"] = editor.getValue();
+	});
+
 	var playing = false;
 
 	function loadExampleCode(script) {
@@ -14,6 +18,12 @@ SQEditor = function(config) {
 	}
 
 	var loadedExample = false;
+
+	if(localStorage["sq_code"]) {
+		editor.setValue(localStorage["sq_code"]);
+		loadedExample = true;
+	}
+
 	$.each(config.example_scripts, function(_, script) {
 		if(!loadedExample) {
 			loadExampleCode(script);
