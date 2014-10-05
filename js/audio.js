@@ -64,6 +64,23 @@ function SQAudio() {
 		handleCommand(cmd.thread_id, cmd.data);
 	});
 
+	EventBus.on("complete", function(){
+		var endTime = 0;
+		$.each(threads, function(_, thread) {
+			var offset = thread.time - ctx.currentTime;
+			if(offset > endTime) {
+				endTime = offset;
+			}
+		});
+
+		console.log(endTime);
+
+		setTimeout(function(){
+			EventBus.fire("stopped");
+			EventBus.fire("log", "Script finished");
+		}, endTime * 1000);
+	});
+
 	EventBus.on("stopped", function(){
 		threads = {};
 	});

@@ -9,8 +9,7 @@ function SQEngine() {
 				delete workers[event.thread_id];
 
 				if($.isEmptyObject(workers)) {
-					EventBus.fire("stopped");
-					EventBus.fire("log", "Script finished");
+					EventBus.fire("complete");
 				}
 				break;
 
