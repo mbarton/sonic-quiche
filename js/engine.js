@@ -10,6 +10,7 @@ function SQEngine() {
 
 				if($.isEmptyObject(workers)) {
 					EventBus.fire("stopped");
+					EventBus.fire("log", "Script finished");
 				}
 				break;
 

@@ -13,7 +13,8 @@ var editor = new SQEditor({
 		"examples/thread_test.rb",
 		"examples/random_test.rb",
 		"examples/lesson1_demo.rb",
-		"examples/lesson2_baseline.rb"
+		"examples/lesson2_baseline.rb",
+		"examples/lesson2_baseline_samples.rb"
 	]
 });
 
