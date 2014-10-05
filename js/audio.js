@@ -3,14 +3,28 @@ function SQAudio() {
 	var ctx = new AudioContext();
 	var samples = {};
 	var threads = {};
-	var endTime = 0;
+	var nodes = {};
 
-	function playSample(sample, time, rate) {
+	function playSample(node_id, sample, time, rate, start, finish) {
+		var sampleDuration = samples[sample].duration;
+		var actualFinish = sampleDuration;
+		if(finish > 0) { actualFinish = finish; }
+		if(actualFinish > sampleDuration) { actualFinish = sampleDuration; }
+
+		// TODO MRB: This seems to be shorter than how long a sound actually lasts when scaled.
+		var scaledDuration = (actualFinish - start) * (2.0 - rate);
+		var endTimeAfterSample = time + scaledDuration;
+
 		var source = ctx.createBufferSource();
+		nodes[node_id] = {
+			source: source,
+			endTime: endTimeAfterSample
+		}
+
 		source.buffer = samples[sample];
 		source.playbackRate.value = rate;
 		source.connect(ctx.destination);
-		source.start(time);
+		source.start(time, start, (actualFinish - start));
 	}
 
 	function playNote(synth, args) {
@@ -20,20 +34,17 @@ function SQAudio() {
 	function handleCommand(thread_id, cmd) {
 		switch(cmd.type) {
 			case "sample":
-				// The Web Audio API appears to be unable to handle negative rates so we don't support it for now
 				var rate = cmd.args.rate || 1.0;
+				var start = cmd.args.start || 0.0;
+				if(start < 0.0) { start = 0.0; }
+				var finish = cmd.args.finish || -1;
+				if(finish < 0.0) { finish = 0.0; }
 
+				// The Web Audio API appears to be unable to handle negative rates so we don't support it for now
 				if(rate <= 0) {
 					EventBus.fire("error", "Browsers don't support playing samples backwards yet. Sad soup.");
 				} else {
-					playSample(cmd.sample, threads[thread_id].time, rate);
-
-					// TODO MRB: This seems to be shorter than how long a sound actually lasts when scaled.
-					var scaledDuration = samples[cmd.sample].duration * (2.0 - rate);
-					var endTimeAfterSample = threads[thread_id].time + scaledDuration;
-					if(endTimeAfterSample > endTime) {
-						endTime = endTimeAfterSample;
-					}
+					playSample(cmd.node_id, cmd.sample, threads[thread_id].time, rate, start, finish);
 				}
 				break;
 			case "note":
@@ -42,9 +53,6 @@ function SQAudio() {
 			case "sleep":
 				var newThreadEndTime = threads[thread_id].time + cmd.length;
 				threads[thread_id].time = newThreadEndTime;
-				if(newThreadEndTime > endTime) {
-					endTime = newThreadEndTime;
-				}
 				break;
 			default:
 				EventBus.fire("error", "Unknown audio command " + cmd.type + " [thread " + thread_id + "]");
@@ -98,6 +106,13 @@ function SQAudio() {
 	});
 
 	EventBus.on("complete", function(){
+		var endTime = 0;
+		$.each(nodes, function(_, node) {
+			if(node.endTime > endTime) {
+				endTime = node.endTime;
+			}
+		});
+
 		var timeUntilEnd = endTime - ctx.currentTime;
 
 		setTimeout(function(){
@@ -106,13 +121,22 @@ function SQAudio() {
 		}, timeUntilEnd * 1000);
 	});
 
+	EventBus.on("stop", function(){
+		$.each(nodes, function(_, node) {
+			node.source.stop(0);
+		});
+	});
+
 	EventBus.on("stopped", function(){
 		threads = {};
+		// GC can go a-reaping from here. TODO MRB: allow nodes to be reaped once they are done
+		nodes = {};
 	});
 
 	return {
 		"ctx": ctx,
 		"load": load,
-		"samples": function() { return samples; }
+		"samples": function() { return samples; },
+		"nodes": function(){ return nodes; }
 	}
 }

@@ -16,6 +16,7 @@
     var _reserved = {
         thread_id: 0,
         current_thread: 0,
+        next_node_id: 0,
         sleep_mul: 0.5, // 120 BPM,
         transpose: 0,
         synth: "square",
@@ -454,7 +455,10 @@ def sample(name, *args_a_or_h)
     args_h = resolve_synth_opts_hash_or_array(args_a_or_h)
     
     %x{
-        _reserved.send("cmd", {type: "sample", sample: name, args: args_h.map});
+        var _reserved_node_id = "" + _reserved.thread_id + "-" + _reserved.next_node_id;
+        _reserved.next_node_id++;
+        _reserved.send("cmd", {type: "sample", node_id: _reserved_node_id, sample: name, args: args_h.map});
+        return _reserved_node_id;
     }
 end
 
