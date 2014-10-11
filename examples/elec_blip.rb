@@ -1,0 +1,12 @@
+sample :elec_blip
+sleep 0.5
+sample :elec_blip
+sleep 0.85
+sample :elec_blip
+sleep 1
+sample :elec_blip
+sleep 0.7
+sample :elec_blip
+sleep 0.2
+sample :elec_blip
+sleep 1
