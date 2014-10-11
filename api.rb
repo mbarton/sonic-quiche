@@ -424,7 +424,7 @@ def play(n, *args)
     final_args = init_args_h.merge(args_h)
 
     %x{
-        _reserved.send("cmd", {type: "note", synth: synth, args: final_args.map});
+        _reserved.send("cmd", {type: "note", synth: synth, note: n, noteLength: _reserved.sleep_mul, args: final_args.map});
     }
 end
 
