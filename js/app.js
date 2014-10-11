@@ -10,6 +10,8 @@ var editor = new SQEditor({
 	play_id: "play",
 	stop_id: "stop",
 	example_scripts: [
+		"examples/elec_blip.rb",
+		"examples/collapsing_amen.rb",
 		"examples/thread_test.rb",
 		"examples/random_test.rb",
 		"examples/lesson1_demo.rb",
@@ -19,3 +21,7 @@ var editor = new SQEditor({
 });
 
 audio.load();
+
+$(function(){
+	$("#hello-modal").foundation("reveal", "open");
+});
