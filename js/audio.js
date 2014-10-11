@@ -5,6 +5,13 @@ function SQAudio() {
 	var threads = {};
 	var nodes = {};
 
+	// http://en.wikipedia.org/wiki/Piano_key_frequencies
+	var NODE_FREQS = {};
+	for(var i = 1; i <= 88; i++) {
+		var exp = (i - 49) / 12;
+		NODE_FREQS[i] = Math.pow(2, exp) * 440;
+	}
+
 	function playSample(node_id, sample, time, rate, start, finish) {
 		var sampleDuration = samples[sample].duration;
 		var actualFinish = sampleDuration;
@@ -27,7 +34,16 @@ function SQAudio() {
 		source.start(time, start, (actualFinish - start));
 	}
 
-	function playNote(synth, args) {
+	function playNote(synth, note, noteLength, time, args) {
+		var osc = ctx.createOscillator();
+		osc.connect(ctx.destination);
+		osc.frequency.value = NODE_FREQS[note];
+		osc.type = synth;
+		osc.start(time);
+		osc.stop(time + noteLength);
+
+		console.log(note);
+		console.log(synth);
 		console.log(args);
 	}
 
@@ -48,7 +64,7 @@ function SQAudio() {
 				}
 				break;
 			case "note":
-				playNote(cmd.synth, cmd.args);
+				playNote(cmd.synth, cmd.note, cmd.noteLength, threads[thread_id].time, cmd.args);
 				break;
 			case "sleep":
 				var newThreadEndTime = threads[thread_id].time + cmd.length;
@@ -136,6 +152,7 @@ function SQAudio() {
 	return {
 		"ctx": ctx,
 		"load": load,
+		"freqs": NODE_FREQS,
 		"samples": function() { return samples; },
 		"nodes": function(){ return nodes; }
 	}
