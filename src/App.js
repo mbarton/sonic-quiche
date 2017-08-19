@@ -4,12 +4,15 @@ import { Grid } from 'semantic-ui-react';
 import { TopBar } from './TopBar'; 
 import { Editor } from './Editor'; 
 
+import { Engine } from './engine';
+
 import 'semantic-ui-css/semantic.min.css';
 import { DEFAULT_CODE } from './util';
 
 class App extends React.Component {
   state = {
     code: localStorage.sonicQuicheCode ? localStorage.sonicQuicheCode : DEFAULT_CODE,
+    engine: new Engine(),
     playing: false
   }
 
@@ -18,7 +21,12 @@ class App extends React.Component {
     this.setState({ code });
   }
 
-  execCode = (code) => {
+  execCode = () => {
+    const { engine, code } = this.state;
+
+    const compiled = engine.compile(code);
+    engine.execute(compiled);
+
     if(!this.state.playing) {
       this.setState({ playing: true });
     }
@@ -26,6 +34,10 @@ class App extends React.Component {
 
   setPlayback = (playing) => {
     this.setState({ playing });
+
+    if(!playing) {
+      this.state.engine.stop();
+    }
   }
 
   render() {
