@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Grid } from 'semantic-ui-react';
 import { TopBar } from './TopBar'; 
+import { Sidebar } from './Sidebar'; 
 import { Editor } from './Editor'; 
 
 import { Engine } from './engine';
@@ -12,7 +13,8 @@ import { DEFAULT_CODE } from './util';
 class App extends React.Component {
   state = {
     code: localStorage.sonicQuicheCode ? localStorage.sonicQuicheCode : DEFAULT_CODE,
-    engine: new Engine(),
+    engine: new Engine((e) => this.handleEvent(e)),
+    events: [],
     playing: false
   }
 
@@ -40,12 +42,27 @@ class App extends React.Component {
     }
   }
 
+  handleEvent = (rawEvent) => {
+    const event = Object.assign({}, rawEvent, { timestamp: new Date().toLocaleString() });
+    const events = [event].concat(this.state.events);
+
+    if(events.length > 20) {
+      events.pop();
+    }
+
+    if(event.action === "complete") {
+      this.setState({ playing: false });
+    }
+
+    this.setState({ events });
+  }
+
   render() {
     return <div onKeyPress={this.handleShortcuts}>
       <TopBar playing={this.state.playing} setPlayback={this.setPlayback} />
       <Grid>
         <Grid.Row>
-          <Grid.Column width={10}>
+          <Grid.Column width={12}>
             <Editor
               code={this.state.code}
               setCode={this.setCode}
@@ -53,8 +70,8 @@ class App extends React.Component {
               setPlayback={this.setPlayback}
             />
           </Grid.Column>
-          <Grid.Column width={2}>
-            <h3>sidebar</h3>
+          <Grid.Column width={4}>
+            <Sidebar events={this.state.events} />
           </Grid.Column>
         </Grid.Row>
       </Grid>
